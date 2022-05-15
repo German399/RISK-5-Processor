@@ -1,0 +1,63 @@
+
+name: action
+
+on:
+  [ pull_request_target ]
+
+jobs:
+  
+  prep:
+    runs-on: self-hosted
+    steps:
+      - name: Git clone 
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      - name: Checkout tools repo
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: resources/
+          
+      - name: Build
+        run: |
+          cp -r /home/github_actions/hackaton_soc_demo/rtl_hack/scripts/ .
+          bash ./scripts/clear_all.sh
+          cp ./scripts/check_files.sh ./resources/
+          bash ./resources/check_files.sh
+          cp ./scripts/check_artifacts.sh ./resources/
+          bash ./resources/check_artifacts.sh ${{ github.repository }}
+  test:
+    runs-on: self-hosted
+    needs: prep
+    steps:
+      - name: Checking
+        run: |  
+          ./scripts/build_fast.sh 
+          ./scripts/build_full.sh
+  
+  send_artifact:
+    runs-on: self-hosted
+    needs: [test]
+    if: always() && (needs.test.result == 'failure')
+    steps: 
+      - name: Set current date as env variable
+        run: echo "NOW=$(date +'%d-%h_%H-%M')" >> $GITHUB_ENV
+      - name: artifact_prep
+        run :
+          bash ./scripts/send_log.sh
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.NOW }}_mpsis_log
+          path: ./log.tar.bz2
+          retention-days: 2
+          
+  clear_all:
+    runs-on: self-hosted
+    needs: [prep, test, send_artifact]
+    if: always()
+    steps: 
+      - name: Clear
+        run: |
+          bash ./scripts/clear_all.sh
