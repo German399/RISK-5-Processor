@@ -1,6 +1,6 @@
 /*******************************************************
- * Copyright (C) 2022 National Research University of Electronic Technology (MIET),
- * Institute of Microdevices and Control Systems.
+ * Copyright (C) Copyright (C) 2022 German Iangalin, Bauman Moscow State Technical University,
+ * Faculty of Rocket and Space Engineering.
  * All Rights Reserved.
  *
  * This file is part of  miriscv core.
